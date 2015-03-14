@@ -15,12 +15,14 @@ import autor.builder.exception.AutorException;
 import autor.builder.message.ConsoleHelper;
 import autor.builder.template.JavaTemplate;
 import autor.builder.template.SubClass;
+import autor.builder.template.TemplateSerialization;
+import autor.builder.utils.CollectionUtils;
 
 public class SaxXmlParser {
 	private static final String R_CLASS_NAME = "R";
 	private static SAXParserFactory parserFactory;
 	
-	public static JavaTemplate parse(String packageName, List<IFile> files) throws AutorException{
+	public static JavaTemplate parse(String packageName, List<IFile> files, String projectName) throws AutorException{
 	    ConsoleHelper.printInfo("package name:"+packageName);
 		if (parserFactory == null) {
 			parserFactory = SAXParserFactory.newInstance();
@@ -30,13 +32,21 @@ public class SaxXmlParser {
         template.setClassName(R_CLASS_NAME);
         template.setPackageName(packageName);
 		
-        return parseFile(files, template);
+        return parseFile(files, template, projectName);
 	}
 	
-	private static JavaTemplate parseFile(List<IFile> files, JavaTemplate template) throws AutorException{
+	private static JavaTemplate parseFile(List<IFile> files, JavaTemplate template, String projectName) throws AutorException{
 	    XmlContentHandler contentHandler = null;
 		
 	    Map<String, String> tempMap = new HashMap<String, String>();
+	    
+	    // 获取前面已经解析的xml。
+	    JavaTemplate oldJavaTemplate = TemplateSerialization.getSerilFile(projectName);
+	    if (oldJavaTemplate != null && CollectionUtils.isNotEmpty(oldJavaTemplate.getSubClasses())) {
+			for (SubClass subClass : oldJavaTemplate.getSubClasses()) {
+				tempMap.put(subClass.getSubClassName(), subClass.getComment());
+			}
+		}
 	    
 		List<SubClass> subClasses = template.getSubClasses();
 		SubClass subClass = null;

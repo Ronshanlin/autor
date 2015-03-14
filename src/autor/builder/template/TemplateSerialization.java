@@ -21,8 +21,7 @@ import autor.builder.utils.TemplateCompare;
 
 /**
  * 
- * 〈一句话功能简述〉<br> 
- * 〈功能详细描述〉
+ * 序列化数据到本地，当xml增量变化时，与原有数据合并<br> 
  *
  * @author shazl
  */
@@ -59,7 +58,7 @@ public class TemplateSerialization {
         return newTemplate;
     }
     
-    public static void removeSerilFile(String fileName){
+    public static void removeAll(String fileName){
         File file = new File(getPath(fileName));
         
         if (file.exists()) {
@@ -67,6 +66,50 @@ public class TemplateSerialization {
         }
     }
     
+    public static void remove(String fileName, String key){
+    	try {
+    		TemplateSerialization serialization = new TemplateSerialization();
+			String oldJson =  serialization.readFile(fileName);
+			if (StringUtils.isEmpty(oldJson)) {
+				return;
+			}
+			
+			JavaTemplate template = JsonUtil.fromJson(oldJson, JavaTemplate.class);
+			SubClass subClass = null;
+			int flag = -1;
+			for (int i = 0; i < template.getSubClasses().size(); i++) {
+				subClass = template.getSubClasses().get(i);
+				if (subClass.getComment().equals(key)) {
+					flag = i;
+				}
+			}
+			
+			if (flag != -1) {
+				template.getSubClasses().remove(flag);
+				// 重写file
+				serialization.writeFile(JsonUtil.toJson(template), fileName);
+			}
+		} catch (Exception e) {
+			ConsoleHelper.printError("remove from serilization file error ", e);
+		}
+    }
+    
+    public static JavaTemplate getSerilFile(String serilFileName){
+    	try {
+    		TemplateSerialization serialization = new TemplateSerialization();
+			String oldJson =  serialization.readFile(serilFileName);
+			if (StringUtils.isEmpty(oldJson)) {
+				return null;
+			}else {
+				return JsonUtil.fromJson(oldJson, JavaTemplate.class);
+			}
+			
+		} catch (Exception e) {
+			ConsoleHelper.printError("get serilization file error ", e);
+		}
+    	
+    	return null;
+    } 
     /**
      * 功能描述: 读取文件，并转为对象<br>
      *
@@ -111,25 +154,37 @@ public class TemplateSerialization {
         JavaTemplate newTemplate = JsonUtil.fromJson(newTemplateJson, JavaTemplate.class);
         JavaTemplate oldTemplate = JsonUtil.fromJson(oldTemplateJson, JavaTemplate.class);
         
-//        Map<String, String> newMap = new HashMap<String, String>();
         Map<String, SubClass> oldMap = new HashMap<String, SubClass>();
+        Map<String, SubClass> oldFileMap = new HashMap<String, SubClass>();
         
         for (SubClass oldSubClass : oldTemplate.getSubClasses()) {
             oldMap.put(oldSubClass.getSubClassName(), oldSubClass);
+            oldFileMap.put(oldSubClass.getComment(), oldSubClass);
         }
         
         List<SubClass> subClasses = new ArrayList<SubClass>();
         SubClass oldSubClass = null;
+        SubClass oldSubClassByFileName = null;
         
         for (SubClass newSubClass : newTemplate.getSubClasses()) {
             oldSubClass = oldMap.get(newSubClass.getSubClassName());
+            oldSubClassByFileName = oldFileMap.get(newSubClass.getComment());
+            
             // 获取发生改变的subclass
-            // 1. 没有在map中取到， 2. 取到，但内容不一致
-            if (oldSubClass == null) {
+            // 1. 没有在map中取到(新增)， 2. 取到，但内容不一致（修改）
+            if (oldSubClass == null && oldSubClassByFileName == null) {
                 subClasses.add(newSubClass);
                 continue;
             }
             
+            // 内容改变，但为namespace变化
+            if (oldSubClass == null && oldSubClassByFileName != null) {
+                subClasses.add(newSubClass);
+                oldMap.remove(oldSubClassByFileName.getSubClassName());
+                continue;
+            }
+            
+            // 内容改变，namespace没有变化
             if (!TemplateCompare.compareSubclass(oldSubClass, newSubClass)) {
                 subClasses.add(newSubClass);
                 oldMap.remove(newSubClass.getSubClassName());

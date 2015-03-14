@@ -25,6 +25,10 @@ import autor.builder.utils.StringUtils;
 import autor.builder.utils.TemplateCompare;
 import autor.builder.xml.SaxXmlParser;
 
+/**
+ * 
+ * @author shanlin
+ */
 public class AutorBuilder extends IncrementalProjectBuilder {
 	private static Map<String, String> last_cache = new HashMap<String, String>();
 	/*
@@ -65,17 +69,18 @@ public class AutorBuilder extends IncrementalProjectBuilder {
 		}
 		
 		try {
+			String projectName = getProject().getName();
 			// 校验和解析xml
 			JavaTemplate template = SaxXmlParser.parse(
-					ProjectHelper.getPackagePrefix(getProject().getName()),
-					new ArrayList<IFile>(ifileMap.values()));
+					ProjectHelper.getPackagePrefix(projectName),
+					new ArrayList<IFile>(ifileMap.values()), projectName);
 			// 查看是否变化
 			if (template==null || this.compare(template)) {
 				return;
 			}
 			
 			// 序列化到本地
-			template = TemplateSerialization.serialize(getProject().getName(), template);
+			template = TemplateSerialization.serialize(projectName, template);
 			// 解析freemaker模板
 			String javaCode = FreemarkerParser.parse(template);
 			ConsoleHelper.printInfo("java code:" + javaCode);
@@ -123,17 +128,17 @@ public class AutorBuilder extends IncrementalProjectBuilder {
 	 * 如果一直改变项目名，可导致内存溢出o(╯□╰)o
 	 * 
 	 * @param template
-	 * @return true 如果发生变化
+	 * @return true if changed
 	 */
 	private synchronized boolean compare(JavaTemplate template){
 		String oldValue = last_cache.get(getProject().getName());
+		last_cache.put(getProject().getName(), JsonUtil.toJson(template));
 		
 		if (StringUtils.isEmpty(oldValue)) {
-			last_cache.put(getProject().getName(), JsonUtil.toJson(template));
 			return false;
 		}
 		
-        return TemplateCompare.compareTemplate(JsonUtil.fromJson(oldValue, JavaTemplate.class),
+		return TemplateCompare.compareTemplate(JsonUtil.fromJson(oldValue, JavaTemplate.class),
                 template);
 	}
 	
@@ -159,7 +164,7 @@ public class AutorBuilder extends IncrementalProjectBuilder {
 					checkXML(resource,ifileMap); // handle added resource
 					break;
 				case IResourceDelta.REMOVED:
-				    //do nothing.
+				    TemplateSerialization.remove(getProject().getName(), resource.getName());
 					break;
 				case IResourceDelta.CHANGED:
 					checkXML(resource,ifileMap);; // handle changed resource

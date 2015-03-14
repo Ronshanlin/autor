@@ -27,7 +27,7 @@ public class XmlContentHandler extends XMLErrorHandler {
 	private List<ClassProperty> classProperties;
 	private ClassProperty classProperty;
 	
-	private Map<String, String> tempMapId = new HashMap<String, String>();
+	private Map<String, String> idTempMap = new HashMap<String, String>();
 	private Map<String, String> tempMapNS = new HashMap<String, String>();
 	private String namespce = null;
 	private Locator locator;
@@ -79,7 +79,15 @@ public class XmlContentHandler extends XMLErrorHandler {
         // 
         if (SQLMAP.equalsIgnoreCase(qName)) {
         	this.namespce = atts.getValue(SQLMAP_NAMESPACE);
-        	if (tempMapNS.containsKey(this.namespce.toUpperCase())) {
+		    if (StringUtils.isEmpty(this.namespce)) {
+                throw new SAXParseException(file.getName() + " does not have a namepsace",
+                        this.locator);
+            }else {
+				this.namespce = this.namespce.trim();
+			}
+		    // 缓存中存在相同的namespace，且文件名不同
+        	if (tempMapNS.containsKey(this.namespce.toUpperCase()) &&
+        			!this.file.getName().equals(tempMapNS.get(this.namespce.toUpperCase()))) {
                 throw new SAXParseException(this.file.getName() + " and " + tempMapNS.get(this.namespce.toUpperCase())
                         + " has the same namespace: " +this. namespce + "", this.locator);
             }
@@ -95,16 +103,15 @@ public class XmlContentHandler extends XMLErrorHandler {
 	        this.classProperty.setPropValue(this.namespce.concat(AutorConstants.SEPARATOR_DOT));
 	        this.classProperties.add(classProperty);
 		}else if (SQL.equalsIgnoreCase(qName)) {
-		    if (StringUtils.isEmpty(this.namespce)) {
-                throw new SAXParseException(file.getName() + " does not have a namepsace",
-                        this.locator);
-            }
-			String key = this.namespce.concat("."+atts.getValue(SQL_ID));
-			if (tempMapId.containsKey(key)) {
+			if (StringUtils.isEmpty(atts.getValue(SQL_ID))) {
+                throw new SAXParseException(file.getName() + " has a sql that does not has a sqlId", this.locator);
+			}
+			String key = this.namespce.concat("."+atts.getValue(SQL_ID).trim());
+			if (idTempMap.containsKey(key)) {
                 throw new SAXParseException(file.getName() + " has exist the same sqlId:"
                         + atts.getValue(SQL_ID), this.locator);
 			}else {
-				tempMapId.put(key, "");
+				idTempMap.put(key, "");
 			}
 			this.classProperty = new ClassProperty();
 			this.classProperty.setPropName(atts.getValue(SQL_ID).toUpperCase());
