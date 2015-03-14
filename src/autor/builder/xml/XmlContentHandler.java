@@ -186,7 +186,6 @@ public class XmlContentHandler extends XMLErrorHandler {
      */  
     @Override  
     public void setDocumentLocator(Locator locator) {  
-		ConsoleHelper.printInfo(">>> set document_locator");
 		this.locator = locator;
     }  
   

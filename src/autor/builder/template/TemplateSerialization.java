@@ -93,6 +93,7 @@ public class TemplateSerialization {
     
     private void writeFile(String json, String fileName) throws IOException{
         File file = new File(getPath(fileName));
+        ConsoleHelper.printInfo("json file path: "+file.getAbsolutePath());
         
         Writer writer = new FileWriter(file);
         writer.write(json);

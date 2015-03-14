@@ -1,5 +1,9 @@
 package autor.builder.template;
 
+/**
+ * @author shazl
+ * @since 2015-3-14
+ */
 public class ClassProperty {
     private String propName;
     private String propValue;

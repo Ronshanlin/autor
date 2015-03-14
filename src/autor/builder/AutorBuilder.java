@@ -90,7 +90,7 @@ public class AutorBuilder extends IncrementalProjectBuilder {
 	
 	void checkXML(IResource resource, Map<String, IFile> iFileMap) {
 	    ConsoleHelper.printInfo("**************check xml:"+resource.getLocation());
-	    String target = getProject().getName().concat(AutorConstants.SEPARATOR_BACKSLASH).concat(AutorConstants.SRC_FOLDER_TARGET);
+	    String target = getProject().getName().concat(AutorConstants.SEPARATOR_BACKSLASH).concat(AutorConstants.MVN_COMPILE_FOLDER_TARGET);
 	    
         if (!resource.getLocation().toString().contains(target) && (resource instanceof IFile)
                 && resource.getName().toLowerCase().startsWith(AutorConstants.SQLMAP_PREFIX)
