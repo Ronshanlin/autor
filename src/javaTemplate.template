@@ -1,0 +1,18 @@
+package ${packageName};
+/**
+ * 本类由插件自动生成，请勿手动修改
+ * @author shazl
+ * @since ${createTime}
+ */
+public class ${className} {
+	<#list subClasses as subClass>
+	/**
+	 * ${subClass.comment}
+	 */
+	public static class ${subClass.subClassName} {
+		<#list subClass.properties as property>
+		public static final String ${property.propName} = "${property.propValue}";
+		</#list>
+	}
+	</#list>
+}
