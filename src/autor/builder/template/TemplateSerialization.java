@@ -211,8 +211,8 @@ public class TemplateSerialization {
     
     private static String getPath(IProject project){
         return project.getLocation().toString().concat(AutorConstants.SEPARATOR_SLASH)
-                .concat(AutorConstants.FILE_DIR_SETTINGS).concat(project.getName())
-                .concat(AutorConstants.FILE_SUFFIX_JSON);
+                .concat(AutorConstants.FILE_DIR_SETTINGS).concat(AutorConstants.SEPARATOR_SLASH)
+                .concat(project.getName()).concat(AutorConstants.FILE_SUFFIX_JSON);
     }
     
 }
