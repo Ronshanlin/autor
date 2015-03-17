@@ -73,14 +73,14 @@ public class AutorBuilder extends IncrementalProjectBuilder {
 			// 校验和解析xml
 			JavaTemplate template = SaxXmlParser.parse(
 					ProjectHelper.getPackagePrefix(projectName),
-					new ArrayList<IFile>(ifileMap.values()), projectName);
+					new ArrayList<IFile>(ifileMap.values()), getProject());
 			// 查看是否变化
 			if (template==null || this.compare(template)) {
 				return;
 			}
 			
 			// 序列化到本地
-			template = TemplateSerialization.serialize(projectName, template);
+			template = TemplateSerialization.serialize(getProject(), template);
 			// 解析freemaker模板
 			String javaCode = FreemarkerParser.parse(template);
 			ConsoleHelper.printInfo("java code:" + javaCode);
@@ -164,7 +164,7 @@ public class AutorBuilder extends IncrementalProjectBuilder {
 					checkXML(resource,ifileMap); // handle added resource
 					break;
 				case IResourceDelta.REMOVED:
-				    TemplateSerialization.remove(getProject().getName(), resource.getName());
+				    TemplateSerialization.remove(getProject(), resource.getName());
 					break;
 				case IResourceDelta.CHANGED:
 					checkXML(resource,ifileMap);; // handle changed resource
