@@ -70,7 +70,7 @@ public class AddRemoveAutorNatureHandler extends AbstractHandler {
 				project.setDescription(description, null);
 				
 				// 删除序列化文件
-				TemplateSerialization.removeAll(project.getName());
+				TemplateSerialization.removeAll(project);
 				// 删除gen资源包
 				ProjectHelper.removeSrc(project, false);
 				// 删除缓存
