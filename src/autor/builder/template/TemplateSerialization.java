@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IProject;
+
 import autor.builder.message.ConsoleHelper;
 import autor.builder.utils.AutorConstants;
 import autor.builder.utils.JsonUtil;
@@ -28,16 +30,16 @@ import autor.builder.utils.TemplateCompare;
 public class TemplateSerialization {
     private TemplateSerialization(){}
     
-    public static JavaTemplate serialize(String serilFileName, JavaTemplate newTemplate){
+    public static JavaTemplate serialize(IProject project, JavaTemplate newTemplate){
         ConsoleHelper.printInfo("template Serialization");
         TemplateSerialization serialization = new TemplateSerialization();
         String newJson = JsonUtil.toJson(newTemplate);
         try {
             // 获取就序列化文件 
-            String oldJson =  serialization.readFile(serilFileName);
+            String oldJson =  serialization.readFile(project);
             if (StringUtils.isEmpty(oldJson)) {
                 // 序列化新数据
-                serialization.writeFile(newJson, serilFileName);
+                serialization.writeFile(project,newJson);
                 return newTemplate;
             }
             
@@ -48,7 +50,7 @@ public class TemplateSerialization {
             
             // 比较模板
             JavaTemplate template = serialization.compare(newJson, oldJson);
-            serialization.writeFile(JsonUtil.toJson(template), serilFileName);
+            serialization.writeFile(project,JsonUtil.toJson(template));
             
             return template;
         } catch (Exception e) {
@@ -58,18 +60,24 @@ public class TemplateSerialization {
         return newTemplate;
     }
     
-    public static void removeAll(String fileName){
-        File file = new File(getPath(fileName));
+    public static void removeAll(IProject project){
+        File file = new File(getPath(project));
         
         if (file.exists()) {
             file.delete();
         }
     }
     
-    public static void remove(String fileName, String key){
+    /**
+     * 功能描述: 根据key（xml文件名）删除已存在的记录<br>
+     *
+     * @param project
+     * @param key
+     */
+    public static void remove(IProject project, String key){
     	try {
     		TemplateSerialization serialization = new TemplateSerialization();
-			String oldJson =  serialization.readFile(fileName);
+			String oldJson =  serialization.readFile(project);
 			if (StringUtils.isEmpty(oldJson)) {
 				return;
 			}
@@ -87,17 +95,17 @@ public class TemplateSerialization {
 			if (flag != -1) {
 				template.getSubClasses().remove(flag);
 				// 重写file
-				serialization.writeFile(JsonUtil.toJson(template), fileName);
+				serialization.writeFile(project, JsonUtil.toJson(template));
 			}
 		} catch (Exception e) {
 			ConsoleHelper.printError("remove from serilization file error ", e);
 		}
     }
     
-    public static JavaTemplate getSerilFile(String serilFileName){
+    public static JavaTemplate getSerilFile(IProject project){
     	try {
     		TemplateSerialization serialization = new TemplateSerialization();
-			String oldJson =  serialization.readFile(serilFileName);
+			String oldJson =  serialization.readFile(project);
 			if (StringUtils.isEmpty(oldJson)) {
 				return null;
 			}else {
@@ -118,8 +126,8 @@ public class TemplateSerialization {
      * @throws IOException
      * @throws FileNotFoundException
      */
-    private String readFile(String fileName) throws IOException, FileNotFoundException{
-        File file = new File(getPath(fileName));
+    private String readFile(IProject project) throws IOException, FileNotFoundException{
+        File file = new File(getPath(project));
         if (!file.exists()) {
             return null;
         }
@@ -134,8 +142,8 @@ public class TemplateSerialization {
         return json;
     }
     
-    private void writeFile(String json, String fileName) throws IOException{
-        File file = new File(getPath(fileName));
+    private void writeFile(IProject project, String json) throws IOException{
+        File file = new File(getPath(project));
         ConsoleHelper.printInfo("json file path: "+file.getAbsolutePath());
         
         Writer writer = new FileWriter(file);
@@ -201,9 +209,9 @@ public class TemplateSerialization {
         return newTemplate;
     }
     
-    private static String getPath(String fileName){
-        return AutorConstants.FILE_PATH.concat(AutorConstants.SEPARATOR_SLASH).concat(fileName)
-                .concat(AutorConstants.FILE_SUFFIX_JSON);
+    private static String getPath(IProject project){
+        return project.getLocation().toString().concat(AutorConstants.SEPARATOR_SLASH)
+                .concat(project.getName()).concat(AutorConstants.FILE_SUFFIX_JSON);
     }
     
 }
