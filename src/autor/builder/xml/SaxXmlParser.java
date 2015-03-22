@@ -8,6 +8,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IProject;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
@@ -22,7 +23,7 @@ public class SaxXmlParser {
 	private static final String R_CLASS_NAME = "R";
 	private static SAXParserFactory parserFactory;
 	
-	public static JavaTemplate parse(String packageName, List<IFile> files, String projectName) throws AutorException{
+	public static JavaTemplate parse(String packageName, List<IFile> files, IProject project) throws AutorException{
 	    ConsoleHelper.printInfo("package name:"+packageName);
 		if (parserFactory == null) {
 			parserFactory = SAXParserFactory.newInstance();
@@ -32,16 +33,16 @@ public class SaxXmlParser {
         template.setClassName(R_CLASS_NAME);
         template.setPackageName(packageName);
 		
-        return parseFile(files, template, projectName);
+        return parseFile(files, template, project);
 	}
 	
-	private static JavaTemplate parseFile(List<IFile> files, JavaTemplate template, String projectName) throws AutorException{
+	private static JavaTemplate parseFile(List<IFile> files, JavaTemplate template, IProject project) throws AutorException{
 	    XmlContentHandler contentHandler = null;
 		
 	    Map<String, String> tempMap = new HashMap<String, String>();
 	    
 	    // 获取前面已经解析的xml。
-	    JavaTemplate oldJavaTemplate = TemplateSerialization.getSerilFile(projectName);
+	    JavaTemplate oldJavaTemplate = TemplateSerialization.getSerilFile(project);
 	    if (oldJavaTemplate != null && CollectionUtils.isNotEmpty(oldJavaTemplate.getSubClasses())) {
 			for (SubClass subClass : oldJavaTemplate.getSubClasses()) {
 				tempMap.put(subClass.getSubClassName(), subClass.getComment());
